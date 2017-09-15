@@ -15,7 +15,7 @@ class RequestedAuthorityService @Inject()(requestedAuthorityRepository: Requeste
     requestedAuthorityRepository.save(requestedAuthority)
   }
 
-  def fetch(id: String): Future[Option[RequestedAuthority]] = ???
+  def fetch(id: String): Future[Option[RequestedAuthority]] = requestedAuthorityRepository.fetch(id)
 
   def updateAuthorityUser(id: String, userId: String): Future[RequestedAuthority] = {
     for {

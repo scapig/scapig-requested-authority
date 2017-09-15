@@ -40,6 +40,31 @@ class RequestedAuthorityServiceSpec extends UnitSpec with MockitoSugar with Befo
     }
   }
 
+  "fetch" should {
+
+    "return the requested authority when it exists" in new Setup {
+      given(mockRequestedAuthorityRepository.fetch(requestedAuthority.id.toString)).willReturn(successful(Some(requestedAuthority)))
+
+      val result = await(underTest.fetch(requestedAuthority.id.toString))
+
+      result shouldBe Some(requestedAuthority)
+    }
+
+    "return None when it does not exist" in new Setup {
+      given(mockRequestedAuthorityRepository.fetch(requestedAuthority.id.toString)).willReturn(successful(None))
+
+      val result = await(underTest.fetch(requestedAuthority.id.toString))
+
+      result shouldBe None
+    }
+
+    "propagate exceptions thrown by the repository" in new Setup {
+      given(mockRequestedAuthorityRepository.fetch(requestedAuthority.id.toString)).willReturn(Future.failed(new RuntimeException("test error")))
+
+      intercept[RuntimeException]{await(underTest.fetch(requestedAuthority.id.toString))}
+    }
+  }
+
   "updateAuthorityUser" should {
     "fetch the requested authority and update the userId" in new Setup {
       val expectedRequestedAuthority = requestedAuthority.copy(userId = Some("userId"))

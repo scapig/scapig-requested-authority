@@ -34,3 +34,4 @@ case class AuthorityRequest(clientId: String,
                             redirectUri: String,
                             authType: AuthType)
 
+case class AuthorityUpdateRequest(userId: String)

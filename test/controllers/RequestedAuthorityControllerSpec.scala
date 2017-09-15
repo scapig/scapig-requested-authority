@@ -20,6 +20,7 @@ import scala.concurrent.Future.successful
 class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with BeforeAndAfterAll {
 
   val authorityRequest = AuthorityRequest("clientId", Seq("scope"), "/redirectUri", AuthType.PRODUCTION)
+  val authorityUpdateRequest = AuthorityUpdateRequest("userId")
   val requestedAuthority = RequestedAuthority(authorityRequest.clientId, authorityRequest.scopes, authorityRequest.redirectUri, authorityRequest.authType)
 
   trait Setup {
@@ -50,6 +51,33 @@ class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with B
       createdRequestedAuthority shouldBe createdRequestedAuthority.copy(id = createdRequestedAuthority.id)
 
       verify(mockRequestedAuthorityService).createAuthority(createdRequestedAuthority)
+    }
+
+    "fail with a 400 (Bad Request) when the json payload is invalid for the request" in new Setup {
+
+      val body = """{ "invalid": "json" }"""
+
+      val result: Result = await(underTest.create()(request.withBody(Json.parse(body))))
+
+      status(result) shouldBe Status.BAD_REQUEST
+      jsonBodyOf(result) shouldBe Json.parse("""{"code":"INVALID_REQUEST","message":"scopes is required"}""")
+      verifyZeroInteractions(mockRequestedAuthorityService)
+    }
+  }
+
+  "update" should {
+
+    "succeed with a 200 with the requested authority when payload is valid and service responds successfully" in new Setup {
+      val updatedRequestedAuthority = requestedAuthority.copy(userId = Some(authorityUpdateRequest.userId))
+
+      given(mockRequestedAuthorityService.updateAuthorityUser(requestedAuthority.id.toString, authorityUpdateRequest.userId))
+        .willReturn(successful(updatedRequestedAuthority))
+
+      val result: Result = await(underTest.update(requestedAuthority.id.toString)(request.withBody(Json.toJson(authorityUpdateRequest))))
+
+      status(result) shouldBe Status.OK
+      jsonBodyOf(result).as[RequestedAuthority] shouldBe  updatedRequestedAuthority
+      verify(mockRequestedAuthorityService).updateAuthorityUser(requestedAuthority.id.toString, authorityUpdateRequest.userId)
     }
 
     "fail with a 400 (Bad Request) when the json payload is invalid for the request" in new Setup {
