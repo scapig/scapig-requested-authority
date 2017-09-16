@@ -11,7 +11,7 @@ import scalaj.http.Http
 class RequestedAuthoritySpec extends BaseFeatureSpec {
 
   val authorityRequest = AuthorityRequest("clientId", Seq("scope"), "/redirectUri", AuthType.PRODUCTION)
-  val authorityUpdateRequest = AuthorityUpdateRequest("userId")
+  val authorityUpdateRequest = AuthorityCompleteRequest("userId")
 
   feature("create and fetch requested authority") {
 
@@ -32,25 +32,29 @@ class RequestedAuthoritySpec extends BaseFeatureSpec {
       Json.parse(fetchResponse.body) shouldBe Json.toJson(newRequestedAuthority)
     }
 
-    scenario("update requested authority") {
+    scenario("complete requested authority") {
       Given("A requested authority exists")
       val createdResponse = Http(s"$serviceUrl/authority")
         .headers(Seq(CONTENT_TYPE -> "application/json"))
         .postData(Json.toJson(authorityRequest).toString()).asString
       val requestedAuthority = Json.parse(createdResponse.body).as[RequestedAuthority]
 
-      When("I update the requested authority with the userId")
+      When("I complete the requested authority with the userId")
       val updateResponse = Http(s"$serviceUrl/authority/${requestedAuthority.id}")
         .headers(Seq(CONTENT_TYPE -> "application/json"))
         .postData("""{"userId":"aUserId"}""").asString
 
       Then("I receive a 200 (Ok) with the updated requested authority")
       updateResponse.code shouldBe Status.OK
-      Json.parse(updateResponse.body) shouldBe Json.toJson(requestedAuthority.copy(userId = Some("aUserId")))
+      val updatedRequestedAuthority = Json.parse(updateResponse.body).as[RequestedAuthority]
+      updatedRequestedAuthority shouldBe requestedAuthority.copy(userId = Some("aUserId"), authorizationCode = updatedRequestedAuthority.authorizationCode)
 
-      And("I can retrieve it from mongo")
-      val fetchResponse = Http(s"$serviceUrl/authority/${requestedAuthority.id}").asString
-      Json.parse(fetchResponse.body).as[RequestedAuthority] shouldBe requestedAuthority.copy(userId = Some("aUserId"))
+      And("The authorization code has been generated")
+      val authorizationCode = updatedRequestedAuthority.authorizationCode.get.code
+
+      And("I can retrieve it from mongo by code")
+      val fetchResponse = Http(s"$serviceUrl/authority?code=$authorizationCode").asString
+      Json.parse(fetchResponse.body).as[RequestedAuthority] shouldBe updatedRequestedAuthority
     }
   }
 }

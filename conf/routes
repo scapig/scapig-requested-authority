@@ -3,6 +3,8 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 
 POST    /authority                  @controllers.RequestedAuthorityController.create()
 
-POST    /authority/:id              @controllers.RequestedAuthorityController.update(id)
+POST    /authority/:id              @controllers.RequestedAuthorityController.complete(id)
 
 GET     /authority/:id              @controllers.RequestedAuthorityController.fetch(id)
+
+GET     /authority                  @controllers.RequestedAuthorityController.fetchByCode(code)

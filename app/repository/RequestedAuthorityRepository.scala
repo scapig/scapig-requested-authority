@@ -34,4 +34,11 @@ class RequestedAuthorityRepository @Inject()(val reactiveMongoApi: ReactiveMongo
       collection.find(Json.obj("id"-> id)).one[RequestedAuthority]
     )
   }
+
+  def fetchByCode(code: String): Future[Option[RequestedAuthority]] = {
+    repository.flatMap(collection =>
+      collection.find(Json.obj("authorizationCode.code"-> code)).one[RequestedAuthority]
+    )
+  }
+
 }

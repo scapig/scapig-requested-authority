@@ -2,10 +2,10 @@ package services
 
 import javax.inject.{Inject, Singleton}
 
-import models.{AuthorityRequest, RequestedAuthority, RequestedAuthorityNotFoundException}
+import models.{RequestedAuthority, RequestedAuthorityNotFoundException}
 import repository.RequestedAuthorityRepository
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
@@ -17,11 +17,13 @@ class RequestedAuthorityService @Inject()(requestedAuthorityRepository: Requeste
 
   def fetch(id: String): Future[Option[RequestedAuthority]] = requestedAuthorityRepository.fetch(id)
 
-  def updateAuthorityUser(id: String, userId: String): Future[RequestedAuthority] = {
+  def fetchByCode(code: String): Future[Option[RequestedAuthority]] = requestedAuthorityRepository.fetchByCode(code)
+
+  def completeRequestedAuthority(id: String, userId: String): Future[RequestedAuthority] = {
     for {
       maybeRequestedAuthority <- requestedAuthorityRepository.fetch(id)
-      requestedAuthority = maybeRequestedAuthority.getOrElse(throw new RequestedAuthorityNotFoundException(id))
-      updatedRequestedAuthority <- requestedAuthorityRepository.save(requestedAuthority.copy(userId = Some(userId)))
-    } yield updatedRequestedAuthority
+      completedRequestedAuthority = maybeRequestedAuthority.getOrElse(throw new RequestedAuthorityNotFoundException(id)).complete(userId)
+      _ <- requestedAuthorityRepository.save(completedRequestedAuthority)
+    } yield completedRequestedAuthority
   }
 }

@@ -20,8 +20,10 @@ import scala.concurrent.Future.successful
 class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with BeforeAndAfterAll {
 
   val authorityRequest = AuthorityRequest("clientId", Seq("scope"), "/redirectUri", AuthType.PRODUCTION)
-  val authorityUpdateRequest = AuthorityUpdateRequest("userId")
+  val authorityCompleteRequest = AuthorityCompleteRequest("userId")
   val requestedAuthority = RequestedAuthority(authorityRequest.clientId, authorityRequest.scopes, authorityRequest.redirectUri, authorityRequest.authType)
+  val completedRequestedAuthority = requestedAuthority.complete("userId")
+  val authorizationCode = completedRequestedAuthority.authorizationCode.get.code
 
   trait Setup {
     val mockRequestedAuthorityService: RequestedAuthorityService = mock[RequestedAuthorityService]
@@ -65,19 +67,19 @@ class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with B
     }
   }
 
-  "update" should {
+  "complete" should {
 
-    "succeed with a 200 with the requested authority when payload is valid and service responds successfully" in new Setup {
-      val updatedRequestedAuthority = requestedAuthority.copy(userId = Some(authorityUpdateRequest.userId))
+    "succeed with a 200 with the completed requested authority when payload is valid and service responds successfully" in new Setup {
+      val completedRequestedAuthority = requestedAuthority.complete(userId = authorityCompleteRequest.userId)
 
-      given(mockRequestedAuthorityService.updateAuthorityUser(requestedAuthority.id.toString, authorityUpdateRequest.userId))
-        .willReturn(successful(updatedRequestedAuthority))
+      given(mockRequestedAuthorityService.completeRequestedAuthority(requestedAuthority.id.toString, authorityCompleteRequest.userId))
+        .willReturn(successful(completedRequestedAuthority))
 
-      val result: Result = await(underTest.update(requestedAuthority.id.toString)(request.withBody(Json.toJson(authorityUpdateRequest))))
+      val result: Result = await(underTest.complete(requestedAuthority.id.toString)(request.withBody(Json.toJson(completedRequestedAuthority))))
 
       status(result) shouldBe Status.OK
-      jsonBodyOf(result).as[RequestedAuthority] shouldBe  updatedRequestedAuthority
-      verify(mockRequestedAuthorityService).updateAuthorityUser(requestedAuthority.id.toString, authorityUpdateRequest.userId)
+      jsonBodyOf(result).as[RequestedAuthority] shouldBe  completedRequestedAuthority
+      verify(mockRequestedAuthorityService).completeRequestedAuthority(requestedAuthority.id.toString, authorityCompleteRequest.userId)
     }
 
     "fail with a 400 (Bad Request) when the json payload is invalid for the request" in new Setup {
@@ -105,10 +107,33 @@ class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with B
       jsonBodyOf(result) shouldBe Json.toJson(requestedAuthority)
     }
 
-    "fail with a 404 (Not Found) when the api-definition does not exist" in new Setup {
+    "fail with a 404 (Not Found) when the requested-authority does not exist" in new Setup {
       given(mockRequestedAuthorityService.fetch(requestedAuthority.id.toString)).willReturn(successful(None))
 
       val result: Result = await(underTest.fetch(requestedAuthority.id.toString)(request))
+
+      status(result) shouldBe Status.NOT_FOUND
+      jsonBodyOf(result) shouldBe Json.parse(s"""{"code": "NOT_FOUND", "message": "requested authority not found"}""")
+    }
+  }
+
+  "fetchByCode" should {
+
+    "succeed with a 200 (Ok) with the requested authority when the requested authority exists" in new Setup {
+
+      given(mockRequestedAuthorityService.fetchByCode(authorizationCode))
+        .willReturn(successful(Some(completedRequestedAuthority)))
+
+      val result: Result = await(underTest.fetchByCode(authorizationCode)(request))
+
+      status(result) shouldBe Status.OK
+      jsonBodyOf(result) shouldBe Json.toJson(completedRequestedAuthority)
+    }
+
+    "fail with a 404 (Not Found) when the requested authority does not exist" in new Setup {
+      given(mockRequestedAuthorityService.fetchByCode(authorizationCode)).willReturn(successful(None))
+
+      val result: Result = await(underTest.fetchByCode(authorizationCode)(request))
 
       status(result) shouldBe Status.NOT_FOUND
       jsonBodyOf(result) shouldBe Json.parse(s"""{"code": "NOT_FOUND", "message": "requested authority not found"}""")

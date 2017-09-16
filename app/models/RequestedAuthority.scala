@@ -9,10 +9,13 @@ case class RequestedAuthority(clientId: String,
                               scopes: Seq[String],
                               redirectUri: String,
                               authType: AuthType.AuthType,
-                              code: Option[AuthorizationCode] = None,
+                              authorizationCode: Option[AuthorizationCode] = None,
                               userId: Option[String] = None,
                               createdAt: DateTime = DateTime.now(),
-                              id: UUID = UUID.randomUUID())
+                              id: UUID = UUID.randomUUID()) {
+
+  def complete(userId: String) = this.copy(userId = Some(userId), authorizationCode = Some(AuthorizationCode()))
+}
 
 object RequestedAuthority {
   def apply(req: AuthorityRequest): RequestedAuthority = RequestedAuthority(req.clientId, req.scopes, req.redirectUri, req.authType)
@@ -23,8 +26,8 @@ object AuthType extends Enumeration {
   val PRODUCTION, SANDBOX = Value
 }
 
-case class AuthorizationCode(code: String,
-                             createdAt: DateTime = DateTime.now(DateTimeZone.UTC)) {
+case class AuthorizationCode(code: String = UUID.randomUUID().toString,
+                             createdAt: DateTime = DateTime.now()) {
   require(code.trim.nonEmpty, "code cannot be empty")
 }
 
@@ -34,4 +37,4 @@ case class AuthorityRequest(clientId: String,
                             redirectUri: String,
                             authType: AuthType)
 
-case class AuthorityUpdateRequest(userId: String)
+case class AuthorityCompleteRequest(userId: String)

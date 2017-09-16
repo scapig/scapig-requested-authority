@@ -15,6 +15,8 @@ import scala.concurrent.Future.successful
 class RequestedAuthorityServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterAll {
 
   val requestedAuthority = RequestedAuthority("clientId", Seq("scope"), "/redirectUri", AuthType.PRODUCTION)
+  val completedRequestedAuthority = requestedAuthority.complete("userId")
+  val authorizationCode = completedRequestedAuthority.authorizationCode.get.code
 
   trait Setup {
     val mockRequestedAuthorityRepository = mock[RequestedAuthorityRepository]
@@ -65,29 +67,53 @@ class RequestedAuthorityServiceSpec extends UnitSpec with MockitoSugar with Befo
     }
   }
 
-  "updateAuthorityUser" should {
-    "fetch the requested authority and update the userId" in new Setup {
-      val expectedRequestedAuthority = requestedAuthority.copy(userId = Some("userId"))
+  "fetchByCode" should {
+
+    "return the requested authority when it exists" in new Setup {
+      given(mockRequestedAuthorityRepository.fetchByCode(authorizationCode)).willReturn(successful(Some(completedRequestedAuthority)))
+
+      val result = await(underTest.fetchByCode(authorizationCode))
+
+      result shouldBe Some(completedRequestedAuthority)
+    }
+
+    "return None when it does not exist" in new Setup {
+      given(mockRequestedAuthorityRepository.fetchByCode(authorizationCode)).willReturn(successful(None))
+
+      val result = await(underTest.fetchByCode(authorizationCode))
+
+      result shouldBe None
+    }
+
+    "propagate exceptions thrown by the repository" in new Setup {
+      given(mockRequestedAuthorityRepository.fetchByCode(authorizationCode)).willReturn(Future.failed(new RuntimeException("test error")))
+
+      intercept[RuntimeException]{await(underTest.fetchByCode(authorizationCode))}
+    }
+  }
+
+  "completeRequestedAuthority" should {
+    "fetch the requested authority, update the userId and assign an authorization code" in new Setup {
 
       given(mockRequestedAuthorityRepository.fetch(requestedAuthority.id.toString)).willReturn(successful(Some(requestedAuthority)))
-      given(mockRequestedAuthorityRepository.save(expectedRequestedAuthority)).willReturn(successful(expectedRequestedAuthority))
 
-      val result = await(underTest.updateAuthorityUser(requestedAuthority.id.toString, "userId"))
+      val result = await(underTest.completeRequestedAuthority(requestedAuthority.id.toString, "userId"))
 
-      result shouldBe expectedRequestedAuthority
-      verify(mockRequestedAuthorityRepository).save(expectedRequestedAuthority)
+      result shouldBe requestedAuthority.copy(userId = Some("userId"), authorizationCode = result.authorizationCode)
+      result.authorizationCode.isDefined shouldBe true
+      verify(mockRequestedAuthorityRepository).save(result)
     }
 
     "fail with RequestedAuthorityNotFoundException when the requested authority does not exist" in new Setup {
       given(mockRequestedAuthorityRepository.fetch(requestedAuthority.id.toString)).willReturn(successful(None))
 
-      intercept[RequestedAuthorityNotFoundException]{await(underTest.updateAuthorityUser(requestedAuthority.id.toString, "userId"))}
+      intercept[RequestedAuthorityNotFoundException]{await(underTest.completeRequestedAuthority(requestedAuthority.id.toString, "userId"))}
     }
 
     "propagate exceptions thrown by the repository" in new Setup {
       when(mockRequestedAuthorityRepository.save(any())).thenReturn(Future.failed(new RuntimeException("test error")))
 
-      intercept[RuntimeException]{await(underTest.updateAuthorityUser(requestedAuthority.id.toString, "userId"))}
+      intercept[RuntimeException]{await(underTest.completeRequestedAuthority(requestedAuthority.id.toString, "userId"))}
     }
   }
 }

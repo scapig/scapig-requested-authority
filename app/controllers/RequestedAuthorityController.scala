@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
-import models.{AuthorityRequest, AuthorityUpdateRequest, RequestedAuthority, RequestedAuthorityNotFound}
+import models._
 import play.api.libs.json.Json
 import play.api.mvc.{AbstractController, ControllerComponents}
 import services.RequestedAuthorityService
@@ -20,9 +20,9 @@ class RequestedAuthorityController  @Inject()(cc: ControllerComponents,
     }
   }
 
-  def update(id: String) =  Action.async(parse.json) { implicit request =>
-    withJsonBody[AuthorityUpdateRequest] { authorityUpdateRequest: AuthorityUpdateRequest =>
-      requestedAuthorityService.updateAuthorityUser(id, authorityUpdateRequest.userId) map { authority => Ok(Json.toJson(authority))}
+  def complete(id: String) =  Action.async(parse.json) { implicit request =>
+    withJsonBody[AuthorityCompleteRequest] { authorityCompleteRequest: AuthorityCompleteRequest =>
+      requestedAuthorityService.completeRequestedAuthority(id, authorityCompleteRequest.userId) map { authority => Ok(Json.toJson(authority))}
     }
   }
 
@@ -32,4 +32,12 @@ class RequestedAuthorityController  @Inject()(cc: ControllerComponents,
       case None => RequestedAuthorityNotFound.toHttpResponse
     }
   }
+
+  def fetchByCode(code: String) = Action.async { implicit request =>
+    requestedAuthorityService.fetchByCode(code) map {
+      case Some(requestedAuthority) => Ok(Json.toJson(requestedAuthority))
+      case None => RequestedAuthorityNotFound.toHttpResponse
+    }
+  }
+
 }
