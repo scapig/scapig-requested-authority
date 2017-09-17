@@ -1,6 +1,6 @@
 package repository
 
-import models.{AuthType, RequestedAuthority}
+import models.{Environment, RequestedAuthority}
 import org.scalatest.BeforeAndAfterEach
 import play.api.inject.guice.GuiceApplicationBuilder
 import utils.UnitSpec
@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class RequestedAuthorityRepositorySpec extends UnitSpec with BeforeAndAfterEach {
 
-  val requestedAuthority = RequestedAuthority("clientId", Seq("scope"), "redirectUri", AuthType.PRODUCTION)
+  val requestedAuthority = RequestedAuthority("clientId", Seq("scope"), "redirectUri", Environment.PRODUCTION)
   val completedRequestedAuthority = requestedAuthority.complete(userId = "userId")
   val code = completedRequestedAuthority.authorizationCode.get.code
 

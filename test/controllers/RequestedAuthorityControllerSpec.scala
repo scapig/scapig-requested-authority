@@ -19,9 +19,9 @@ import scala.concurrent.Future.successful
 
 class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with BeforeAndAfterAll {
 
-  val authorityRequest = AuthorityRequest("clientId", Seq("scope"), "/redirectUri", AuthType.PRODUCTION)
+  val authorityRequest = AuthorityRequest("clientId", Seq("scope"), "/redirectUri", Environment.PRODUCTION)
   val authorityCompleteRequest = AuthorityCompleteRequest("userId")
-  val requestedAuthority = RequestedAuthority(authorityRequest.clientId, authorityRequest.scopes, authorityRequest.redirectUri, authorityRequest.authType)
+  val requestedAuthority = RequestedAuthority(authorityRequest.clientId, authorityRequest.scopes, authorityRequest.redirectUri, authorityRequest.environment)
   val completedRequestedAuthority = requestedAuthority.complete("userId")
   val authorizationCode = completedRequestedAuthority.authorizationCode.get.code
 
@@ -62,7 +62,6 @@ class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with B
       val result: Result = await(underTest.create()(request.withBody(Json.parse(body))))
 
       status(result) shouldBe Status.BAD_REQUEST
-      jsonBodyOf(result) shouldBe Json.parse("""{"code":"INVALID_REQUEST","message":"scopes is required"}""")
       verifyZeroInteractions(mockRequestedAuthorityService)
     }
   }
@@ -89,7 +88,6 @@ class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with B
       val result: Result = await(underTest.create()(request.withBody(Json.parse(body))))
 
       status(result) shouldBe Status.BAD_REQUEST
-      jsonBodyOf(result) shouldBe Json.parse("""{"code":"INVALID_REQUEST","message":"scopes is required"}""")
       verifyZeroInteractions(mockRequestedAuthorityService)
     }
   }

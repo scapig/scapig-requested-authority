@@ -2,13 +2,12 @@ package models
 
 import java.util.UUID
 
-import models.AuthType.AuthType
 import org.joda.time.{DateTime, DateTimeZone}
 
 case class RequestedAuthority(clientId: String,
                               scopes: Seq[String],
                               redirectUri: String,
-                              authType: AuthType.AuthType,
+                              environment: Environment.Environment,
                               authorizationCode: Option[AuthorizationCode] = None,
                               userId: Option[String] = None,
                               createdAt: DateTime = DateTime.now(),
@@ -18,11 +17,11 @@ case class RequestedAuthority(clientId: String,
 }
 
 object RequestedAuthority {
-  def apply(req: AuthorityRequest): RequestedAuthority = RequestedAuthority(req.clientId, req.scopes, req.redirectUri, req.authType)
+  def apply(req: AuthorityRequest): RequestedAuthority = RequestedAuthority(req.clientId, req.scopes, req.redirectUri, req.environment)
 }
 
-object AuthType extends Enumeration {
-  type AuthType = Value
+object Environment extends Enumeration {
+  type Environment = Value
   val PRODUCTION, SANDBOX = Value
 }
 
@@ -35,6 +34,6 @@ case class AuthorizationCode(code: String = UUID.randomUUID().toString,
 case class AuthorityRequest(clientId: String,
                             scopes: Seq[String],
                             redirectUri: String,
-                            authType: AuthType)
+                            environment: Environment.Environment)
 
 case class AuthorityCompleteRequest(userId: String)

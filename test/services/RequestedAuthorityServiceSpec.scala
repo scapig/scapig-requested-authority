@@ -1,6 +1,6 @@
 package services
 
-import models.{AuthType, RequestedAuthority, RequestedAuthorityNotFoundException}
+import models.{Environment, RequestedAuthority, RequestedAuthorityNotFoundException}
 import org.mockito.BDDMockito.given
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{verify, when}
@@ -14,7 +14,7 @@ import scala.concurrent.Future.successful
 
 class RequestedAuthorityServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterAll {
 
-  val requestedAuthority = RequestedAuthority("clientId", Seq("scope"), "/redirectUri", AuthType.PRODUCTION)
+  val requestedAuthority = RequestedAuthority("clientId", Seq("scope"), "/redirectUri", Environment.PRODUCTION)
   val completedRequestedAuthority = requestedAuthority.complete("userId")
   val authorizationCode = completedRequestedAuthority.authorizationCode.get.code
 

@@ -10,7 +10,7 @@ import scalaj.http.Http
 
 class RequestedAuthoritySpec extends BaseFeatureSpec {
 
-  val authorityRequest = AuthorityRequest("clientId", Seq("scope"), "/redirectUri", AuthType.PRODUCTION)
+  val authorityRequest = AuthorityRequest("clientId", Seq("scope"), "/redirectUri", Environment.PRODUCTION)
   val authorityUpdateRequest = AuthorityCompleteRequest("userId")
 
   feature("create and fetch requested authority") {
