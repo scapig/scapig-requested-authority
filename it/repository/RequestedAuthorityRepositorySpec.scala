@@ -56,4 +56,19 @@ class RequestedAuthorityRepositorySpec extends UnitSpec with BeforeAndAfterEach 
       result shouldBe None
     }
   }
+
+  "delete" should {
+    "remove the requested authority" in {
+      await(underTest.save(requestedAuthority))
+
+      await(underTest.delete(requestedAuthority.id.toString)) shouldBe ()
+
+      await(underTest.fetch(requestedAuthority.id.toString)) shouldBe None
+    }
+
+    "not fail when the requested authority does not exist" in {
+      await(underTest.delete("abcd")) shouldBe ()
+    }
+
+  }
 }

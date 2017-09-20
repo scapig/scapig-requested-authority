@@ -10,7 +10,7 @@ import repository.RequestedAuthorityRepository
 import utils.UnitSpec
 
 import scala.concurrent.Future
-import scala.concurrent.Future.successful
+import scala.concurrent.Future.{failed, successful}
 
 class RequestedAuthorityServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterAll {
 
@@ -36,7 +36,7 @@ class RequestedAuthorityServiceSpec extends UnitSpec with MockitoSugar with Befo
     }
 
     "propagate exceptions thrown by the repository" in new Setup {
-      when(mockRequestedAuthorityRepository.save(requestedAuthority)).thenReturn(Future.failed(new RuntimeException("test error")))
+      when(mockRequestedAuthorityRepository.save(requestedAuthority)).thenReturn(failed(new RuntimeException("test error")))
 
       intercept[RuntimeException]{await(underTest.createAuthority(requestedAuthority))}
     }
@@ -61,10 +61,29 @@ class RequestedAuthorityServiceSpec extends UnitSpec with MockitoSugar with Befo
     }
 
     "propagate exceptions thrown by the repository" in new Setup {
-      given(mockRequestedAuthorityRepository.fetch(requestedAuthority.id.toString)).willReturn(Future.failed(new RuntimeException("test error")))
+      given(mockRequestedAuthorityRepository.fetch(requestedAuthority.id.toString)).willReturn(failed(new RuntimeException("test error")))
 
       intercept[RuntimeException]{await(underTest.fetch(requestedAuthority.id.toString))}
     }
+  }
+
+  "delete" should {
+
+    "delete the requested authority from the repository" in new Setup {
+      given(mockRequestedAuthorityRepository.delete(requestedAuthority.id.toString)).willReturn(successful())
+
+      val result = await(underTest.delete(requestedAuthority.id.toString))
+
+      result shouldBe ()
+      verify(mockRequestedAuthorityRepository).delete(requestedAuthority.id.toString)
+    }
+
+    "propagate the error when the repository fails" in new Setup {
+      given(mockRequestedAuthorityRepository.delete(requestedAuthority.id.toString)).willReturn(failed(new RuntimeException("test error")))
+
+      intercept[RuntimeException]{await(underTest.delete(requestedAuthority.id.toString))}
+    }
+
   }
 
   "fetchByCode" should {
@@ -86,7 +105,7 @@ class RequestedAuthorityServiceSpec extends UnitSpec with MockitoSugar with Befo
     }
 
     "propagate exceptions thrown by the repository" in new Setup {
-      given(mockRequestedAuthorityRepository.fetchByCode(authorizationCode)).willReturn(Future.failed(new RuntimeException("test error")))
+      given(mockRequestedAuthorityRepository.fetchByCode(authorizationCode)).willReturn(failed(new RuntimeException("test error")))
 
       intercept[RuntimeException]{await(underTest.fetchByCode(authorizationCode))}
     }
@@ -111,7 +130,7 @@ class RequestedAuthorityServiceSpec extends UnitSpec with MockitoSugar with Befo
     }
 
     "propagate exceptions thrown by the repository" in new Setup {
-      when(mockRequestedAuthorityRepository.save(any())).thenReturn(Future.failed(new RuntimeException("test error")))
+      when(mockRequestedAuthorityRepository.save(any())).thenReturn(failed(new RuntimeException("test error")))
 
       intercept[RuntimeException]{await(underTest.completeRequestedAuthority(requestedAuthority.id.toString, "userId"))}
     }

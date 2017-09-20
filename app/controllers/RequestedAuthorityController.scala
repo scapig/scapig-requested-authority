@@ -33,6 +33,11 @@ class RequestedAuthorityController  @Inject()(cc: ControllerComponents,
     }
   }
 
+  def delete(id: String) = Action.async { implicit request =>
+    requestedAuthorityService.delete(id) map { _ => NoContent
+    }
+  }
+
   def fetchByCode(code: String) = Action.async { implicit request =>
     requestedAuthorityService.fetchByCode(code) map {
       case Some(requestedAuthority) => Ok(Json.toJson(requestedAuthority))

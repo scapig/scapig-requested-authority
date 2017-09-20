@@ -34,10 +34,7 @@ class RequestedAuthoritySpec extends BaseFeatureSpec {
 
     scenario("complete requested authority") {
       Given("A requested authority exists")
-      val createdResponse = Http(s"$serviceUrl/authority")
-        .headers(Seq(CONTENT_TYPE -> "application/json"))
-        .postData(Json.toJson(authorityRequest).toString()).asString
-      val requestedAuthority = Json.parse(createdResponse.body).as[RequestedAuthority]
+      val requestedAuthority = create(authorityRequest)
 
       When("I complete the requested authority with the userId")
       val updateResponse = Http(s"$serviceUrl/authority/${requestedAuthority.id}")
@@ -56,5 +53,30 @@ class RequestedAuthoritySpec extends BaseFeatureSpec {
       val fetchResponse = Http(s"$serviceUrl/authority?code=$authorizationCode").asString
       Json.parse(fetchResponse.body).as[RequestedAuthority] shouldBe updatedRequestedAuthority
     }
+  }
+
+  feature("delete requested authority") {
+
+    scenario("happy path") {
+      Given("A requested authority exists")
+      val requestedAuthority = create(authorityRequest)
+
+      When("I delete the requested authority")
+      val deleteResponse = Http(s"$serviceUrl/authority/${requestedAuthority.id}").method("DELETE").asString
+
+      Then("I receive a 204 (NoContent)")
+      deleteResponse.code shouldBe Status.NO_CONTENT
+
+      And("The requested authority has been deleted")
+      val fetchResponse = Http(s"$serviceUrl/authority/${requestedAuthority.id}").asString
+      fetchResponse.code shouldBe Status.NOT_FOUND
+    }
+  }
+
+  private def create(authorityRequest: AuthorityRequest) = {
+    val response = Http(s"$serviceUrl/authority")
+      .headers(Seq(CONTENT_TYPE -> "application/json"))
+      .postData(Json.toJson(authorityRequest).toString()).asString
+    Json.parse(response.body).as[RequestedAuthority]
   }
 }

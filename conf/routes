@@ -8,3 +8,5 @@ POST    /authority/:id              @controllers.RequestedAuthorityController.co
 GET     /authority/:id              @controllers.RequestedAuthorityController.fetch(id)
 
 GET     /authority                  @controllers.RequestedAuthorityController.fetchByCode(code)
+
+DELETE  /authority/:id              @controllers.RequestedAuthorityController.delete(id)

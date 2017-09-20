@@ -17,6 +17,8 @@ class RequestedAuthorityService @Inject()(requestedAuthorityRepository: Requeste
 
   def fetch(id: String): Future[Option[RequestedAuthority]] = requestedAuthorityRepository.fetch(id)
 
+  def delete(id: String): Future[Unit] = requestedAuthorityRepository.delete(id)
+
   def fetchByCode(code: String): Future[Option[RequestedAuthority]] = requestedAuthorityRepository.fetchByCode(code)
 
   def completeRequestedAuthority(id: String, userId: String): Future[RequestedAuthority] = {

@@ -5,7 +5,7 @@ import javax.inject.{Inject, Singleton}
 import models.RequestedAuthority
 import play.api.libs.json.Json
 import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.api.commands.UpdateWriteResult
+import reactivemongo.api.commands.{UpdateWriteResult, WriteResult}
 import reactivemongo.play.json.collection.JSONCollection
 import reactivemongo.play.json._
 import models.JsonFormatters._
@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class RequestedAuthorityRepository @Inject()(val reactiveMongoApi: ReactiveMongoApi)  {
 
   val repository: Future[JSONCollection] =
-    reactiveMongoApi.database.map(_.collection[JSONCollection]("tapi-application"))
+    reactiveMongoApi.database.map(_.collection[JSONCollection]("tapi-requested-authority"))
 
   def save(requestedAuthority: RequestedAuthority): Future[RequestedAuthority] = {
     repository.flatMap(collection =>
@@ -41,4 +41,12 @@ class RequestedAuthorityRepository @Inject()(val reactiveMongoApi: ReactiveMongo
     )
   }
 
+  def delete(id: String): Future[Unit]= {
+    repository.flatMap(collection =>
+      collection.remove(Json.obj("id"-> id)) map {
+        case result: WriteResult if result.ok => Unit
+        case error => throw new RuntimeException(s"Failed to delete requestedAuthority ${error.writeErrors}")
+      }
+    )
+  }
 }

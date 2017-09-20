@@ -115,6 +115,19 @@ class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with B
     }
   }
 
+  "delete" should {
+
+    "delete the requested authority and succeed with a 204 (NoContent)" in new Setup {
+
+      given(mockRequestedAuthorityService.delete(requestedAuthority.id.toString)).willReturn(successful())
+
+      val result: Result = await(underTest.delete(requestedAuthority.id.toString)(request))
+
+      verify(mockRequestedAuthorityService).delete(requestedAuthority.id.toString)
+      status(result) shouldBe Status.NO_CONTENT
+    }
+  }
+
   "fetchByCode" should {
 
     "succeed with a 200 (Ok) with the requested authority when the requested authority exists" in new Setup {
