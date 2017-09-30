@@ -1,6 +1,6 @@
 package controllers
 
-import models._
+import models.{RequestedAuthorityNotFoundException, _}
 import org.joda.time.DateTimeUtils
 import org.mockito.BDDMockito.given
 import org.mockito.Matchers.any
@@ -15,7 +15,8 @@ import services.RequestedAuthorityService
 import utils.UnitSpec
 import models.JsonFormatters._
 
-import scala.concurrent.Future.successful
+import scala.concurrent.Future
+import scala.concurrent.Future.{failed, successful}
 
 class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with BeforeAndAfterAll {
 
@@ -79,6 +80,17 @@ class RequestedAuthorityControllerSpec extends UnitSpec with MockitoSugar with B
       status(result) shouldBe Status.OK
       jsonBodyOf(result).as[RequestedAuthority] shouldBe  completedRequestedAuthority
       verify(mockRequestedAuthorityService).completeRequestedAuthority(requestedAuthority.id.toString, authorityCompleteRequest.userId)
+    }
+
+    "fail with a 404 when the requested authority does not exist" in new Setup {
+
+      given(mockRequestedAuthorityService.completeRequestedAuthority(requestedAuthority.id.toString, authorityCompleteRequest.userId))
+        .willReturn(failed(new RequestedAuthorityNotFoundException("authority not found")))
+
+      val result: Result = await(underTest.complete(requestedAuthority.id.toString)(request.withBody(Json.toJson(completedRequestedAuthority))))
+
+      status(result) shouldBe Status.NOT_FOUND
+      jsonBodyOf(result) shouldBe Json.parse(s"""{"code": "NOT_FOUND", "message": "requested authority not found"}""")
     }
 
     "fail with a 400 (Bad Request) when the json payload is invalid for the request" in new Setup {

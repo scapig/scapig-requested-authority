@@ -23,6 +23,8 @@ class RequestedAuthorityController  @Inject()(cc: ControllerComponents,
   def complete(id: String) =  Action.async(parse.json) { implicit request =>
     withJsonBody[AuthorityCompleteRequest] { authorityCompleteRequest: AuthorityCompleteRequest =>
       requestedAuthorityService.completeRequestedAuthority(id, authorityCompleteRequest.userId) map { authority => Ok(Json.toJson(authority))}
+    } recover {
+      case _: RequestedAuthorityNotFoundException => RequestedAuthorityNotFound.toHttpResponse
     }
   }
 
