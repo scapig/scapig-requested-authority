@@ -7,6 +7,7 @@ import play.api.Logger
 import play.api.http.DefaultHttpErrorHandler
 import play.api.libs.json.Json
 import play.api.mvc.{RequestHeader, Result, Results}
+import models.JsonFormatters._
 
 import scala.concurrent.Future
 
