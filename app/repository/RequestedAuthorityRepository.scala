@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 @Singleton
 class RequestedAuthorityRepository @Inject()(val reactiveMongoApi: ReactiveMongoApi)  {
 
-  val repository: Future[JSONCollection] =
+  def repository: Future[JSONCollection] =
     reactiveMongoApi.database.map(_.collection[JSONCollection]("tapi-requested-authority"))
 
   def save(requestedAuthority: RequestedAuthority): Future[RequestedAuthority] = {
