@@ -14,7 +14,7 @@ class RequestedAuthorityRepositorySpec extends UnitSpec with BeforeAndAfterEach 
   val code = completedRequestedAuthority.authorizationCode.get.code
 
   lazy val fakeApplication = new GuiceApplicationBuilder()
-    .configure("mongodb.uri" -> "mongodb://localhost:27017/tapi-requested-authority-test")
+    .configure("mongodb.uri" -> "mongodb://localhost:27017/scapig-requested-authority-test")
     .build()
 
   lazy val underTest = fakeApplication.injector.instanceOf[RequestedAuthorityRepository]
