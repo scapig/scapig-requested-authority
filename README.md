@@ -13,12 +13,12 @@ docker build -t scapig-requested-authority .
 
 ## Publishing
 ``
-docker tag scapig-requested-authority scapig/scapig-requested-authority:VERSION
+docker tag scapig-requested-authority scapig/scapig-requested-authority
 docker login
-docker push scapig/scapig-requested-authority:VERSION
+docker push scapig/scapig-requested-authority
 ``
 
 ## Running
 ``
-docker run -p9014:9014 -d scapig/scapig-requested-authority:VERSION
+docker run -p9014:9014 -d scapig/scapig-requested-authority
 ``
