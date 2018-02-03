@@ -1,5 +1,8 @@
 ## scapig-requested-authority
 
+This is the microservice which stores and retrieve the transient requested authority which is created during the Oauth 2.0 user authorization journey.
+It is part of the Scapig API Manager (http://www.scapig.com)
+
 ## Building
 ``
 sbt clean test it:test component:test
